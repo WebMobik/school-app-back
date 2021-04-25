@@ -99,11 +99,11 @@ const read = (req, res) => {
 
 const testResult = async (req, res) => {
   try {
-    const userFind = await User.findById(req.user._id) // TODO: проверить работу бэка с нахождением модели и обновлением
-    const user = extend(userFind, req.body)
-    user.updated = Date.now()
-    await user.save()
-    res.json(user)
+    const updatedUser = await User.findByIdAndUpdate(req.body._id, {
+      $push: { tests: req.body.tests },
+    }).exec()
+    updatedUser.password = undefined
+    res.json(updatedUser)
   } catch (err) {
     return res.status(400).json({
       error: errorHandler.getErrorMessage(err),
