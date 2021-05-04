@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
 const { User } = require('./user.schema')
 const config = require('./config')
-const extend = require('lodash/extend')
 
 const create = async (req, res) => {
   const user = new User(req.body)
@@ -63,60 +62,62 @@ const signin = async (req, res) => {
 }
 
 const requireSignin = expressJwt({
-  secret: config.jwtSecret,
-  userProperty: 'auth',
-  algorithms: ['HS256'],
+    secret: config.jwtSecret,
+    userProperty: 'auth',
+    algorithms: ['HS256'],
 })
 
 const signout = (req, res) => {
-  res.clearCookie('t')
-  return res.status(200).json({
-    message: 'signed out',
-  })
-}
-
-const userById = async (req, res, next, id) => {
-  try {
-    const user = await User.findById(id)
-    if (!user) {
-      return res.status(400).json({
-        error: 'User not found',
-      })
-    }
-    req.profile = user
-    next()
-  } catch (err) {
-    return res.status(400).json({
-      error: 'Could not retrieve user',
+    res.clearCookie('t')
+    return res.status(200).json({
+        message: 'signed out',
     })
-  }
 }
 
 const read = (req, res) => {
-  req.profile.password = undefined
-  return res.json(req.profile)
+    req.profile.password = undefined
+    return res.json(req.profile)
+}
+
+const userById = async (req, res, next, id) => {
+    try {
+        const user = await User.findById(id)
+        if (!user) {
+            return res.status(400).json({
+                error: 'User not found',
+            })
+        }
+        req.profile = user
+        next()
+    } catch (err) {
+        console.log('i call');
+        return res.status(400).json({
+            error: 'Could not retrieve user',
+        })
+    }
 }
 
 const testResult = async (req, res) => {
-  try {
-    const updatedUser = await User.findByIdAndUpdate(req.body._id, {
-      $push: { tests: req.body.tests },
-    }).exec()
-    updatedUser.password = undefined
-    res.json(updatedUser)
-  } catch (err) {
-    return res.status(400).json({
-      error: errorHandler.getErrorMessage(err),
-    })
-  }
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.body._id,
+            {$push: { tests: req.body.test }}
+        )
+        .exec()
+        res.json(user)
+    } catch (err) {
+        return res.status(400).json({
+          error: errorHandler.getErrorMessage(err)
+        })
+    }
 }
 
 module.exports = {
-  create,
-  signin,
-  requireSignin,
-  signout,
-  testResult,
-  userById,
-  read,
+    requireSignin,
+    userById,
+    create,
+    read,
+    signin,
+    signout,
+    testResult
 }
